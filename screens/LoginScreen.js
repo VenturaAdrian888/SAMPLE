@@ -2,14 +2,17 @@ import { useNavigation } from '@react-navigation/core'
 import React, { useEffect, useState } from 'react'
 import { KeyboardAvoidingView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native'
 // import { auth } from '../firebase'
+import { firebase } from '../firebase'
 import { getAuth,createUserWithEmailAndPassword } from "firebase/auth";
 
 const LoginScreen = () => {
-  const [email, setEmail] = useState('')
-  const [password, setPassword] = useState('')
-  
+  const todoRef = firebase.firestore().collection('Users');
   const auth = getAuth();
   const navigation = useNavigation()
+  
+  const [email, setEmail] = useState('')
+  const [password, setPassword] = useState('')
+  const [availableAmount, setAvailableAmount] = useState('0')
 
   useEffect(() => {
     const unsubscribe = auth.onAuthStateChanged(user => {
@@ -25,6 +28,21 @@ const LoginScreen = () => {
     if (email.length == 0) {
       alert("Please Enter Name");
     }else{
+
+      const timestamp = firebase.firestore.FieldValue.serverTimestamp();
+      const data ={
+        email: email,
+        password: password,
+        availableAmount: availableAmount 
+      }
+      todoRef
+          .add(data).then(()=>{
+            setEmail('');
+            setPassword('');
+            setAvailableAmount('0')
+          }).catch((error)=>{
+            alert(error)
+          })
       createUserWithEmailAndPassword(auth, email, password)
       .then(userCredentials => {
         const user = userCredentials.user;
